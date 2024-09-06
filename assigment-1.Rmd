@@ -1,0 +1,49 @@
+---
+title: "Alcohol Consumption"
+output: html_document
+author: "Inna Yedzinovich"
+date: "2024-09-06"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Overview
+
+The World Health Organization (WHO) provides data on pure alcohol consumption in 2010. To make this data more relatable, the figures were converted into standard serving sizes for wine, beer, and spirits. The results reveal the per-capita consumption of these beverages in various countries, highlighting the top consumers for each drink.
+
+Reference article: https://fivethirtyeight.com/features/dear-mona-followup-where-do-people-drink-the-most-beer-wine-and-spirits/
+
+```{r alcohol-consumption, echo = FALSE}
+library(knitr)
+alcohol_consumption <- read.csv("~/data/alcohol-consumption/drinks.csv", fileEncoding = "UTF-8")
+kable(alcohol_consumption)
+
+```
+
+#### The following graph represents the consumption of wine vs. beer in 2010.
+
+```{r beverages, echo=FALSE, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+total_beer_servings <- alcohol_consumption %>% summarize(total_beer_servings = sum(beer_servings, na.rm = TRUE))
+total_wine_servings <- alcohol_consumption %>% summarize(total_wine_servings = sum(wine_servings, na.rm = TRUE))
+total_consumptions <- data.frame(Beverage = c("Beer", "Wine"), Total_Servings = c(total_beer_servings$total_beer_servings, total_wine_servings$total_wine_servings))
+ggplot(data = total_consumptions, aes(x = Beverage, y = Total_Servings)) + geom_bar(stat = "identity")
+```
+
+#### Top 5 countries with the highest beer & wine consumption.
+
+```{r top-3-wine, echo=FALSE, message=FALSE, warning=FALSE}
+library(forcats)
+alcohol_consumption <- alcohol_consumption %>% mutate(total_consumption = beer_servings + wine_servings)
+top_countries <- alcohol_consumption %>% arrange(desc(total_consumption)) %>% head(5)
+ggplot(data = top_countries, aes(x = fct_reorder(country, total_consumption, .desc = TRUE), y = total_consumption)) + geom_bar(stat = "identity")
+```
+
+## Conclusion 
+
+The high beer and wine consumption in Andorra, Slovenia, Portugal, Germany, and Belgium in 2010 can be attributed to several factors, including cultural traditions, economic factors (not necessarily positive), a robust tourism sector, the wide availability and variety of beers and wines, and social norms that embrace alcohol consumption.
+
