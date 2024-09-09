@@ -16,11 +16,12 @@ The World Health Organization (WHO) provides data on pure alcohol consumption in
 
 Reference article: https://fivethirtyeight.com/features/dear-mona-followup-where-do-people-drink-the-most-beer-wine-and-spirits/
 
-```{r alcohol-consumption, echo = FALSE}
+```{r alcohol-consumption, echo = FALSE, message=FALSE, warning=FALSE}
 library(knitr)
-alcohol_consumption <- read.csv("~/data/alcohol-consumption/drinks.csv", fileEncoding = "UTF-8")
+library(readr)
+urlfile <- "https://raw.githubusercontent.com/fivethirtyeight/data/master/alcohol-consumption/drinks.csv"
+alcohol_consumption <- read_csv(url(urlfile))
 kable(alcohol_consumption)
-
 ```
 
 #### The following graph represents the consumption of wine vs. beer in 2010.
@@ -46,4 +47,3 @@ ggplot(data = top_countries, aes(x = fct_reorder(country, total_consumption, .de
 ## Conclusion 
 
 The high beer and wine consumption in Andorra, Slovenia, Portugal, Germany, and Belgium in 2010 can be attributed to several factors, including cultural traditions, economic factors (not necessarily positive), a robust tourism sector, the wide availability and variety of beers and wines, and social norms that embrace alcohol consumption.
-
