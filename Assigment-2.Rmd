@@ -1,0 +1,124 @@
+---
+title: "Assigment-2: R and SQL"
+output: html_document
+date: "2024-09-12"
+---
+
+#### Introduction
+To gather insights on recent popular movies, I will choose six recently released films that have gained significant attention. Then, I will ask at least five people I know—friends, family, classmates, or even imaginary friends if needed—to rate each movie they have watched on a scale from 1 to 5.
+
+```{r reading-from-mysql, include=TRUE}
+
+install.packages("RMySQL", repos = "https://cran.r-project.org")
+library(RMySQL)
+
+user <- Sys.getenv("MYSQL_USER")
+password <- Sys.getenv("MYSQL_PASSWORD")
+host <- Sys.getenv("MYSQL_HOST")
+dbname <- Sys.getenv("MYSQL_DBNAME")
+
+conn <- dbConnect(MySQL(), user = user, password = password, host = host, dbname = dbname)
+
+query <- "select * from movie_rankings"
+movies_ranking_df <- dbGetQuery(conn, query)
+
+query <- "select * from movies"
+movies_df <- dbGetQuery(conn, query)
+
+dbDisconnect(conn)
+```
+
+The first six rows of my friends’ ranking table records.
+
+```{r displaying-movie-ranking-records}
+library(knitr)
+kable(head(movies_ranking_df))
+```
+
+The first six rows of my movies table records.
+
+```{r displaying-all-movies}
+kable(head(movies_df))
+```
+
+The average rating of my frinds for the following 6 movies is: 
+
+```{r friends-ranking-displayed}
+library(dplyr)
+
+mean_ratings_df <- movies_ranking_df %>% group_by(movie_name) %>% 
+  summarise(mean_rating = mean(movie_ranking, na.rm = TRUE))
+
+library(ggplot2)
+ggplot(mean_ratings_df, aes(x = movie_name, y = mean_rating, fill = movie_name)) + 
+  geom_bar(stat = "identity") + 
+  labs(x = "Movie Name", y = "Friends' Average Rating") +
+  theme_minimal() 
+```
+
+#### Note: Missing Data in the Data Frame Example
+Code example: "na.rm = true"is an argument used in functions to specify that missing values should be removed before performing the operation. This is particularly useful in functions like mean(), sum(), sd(), etc. 
+
+Example vector with missing values:
+data <- myNumbers(1, 2, NA, 4, 5)
+
+Calculate the mean, removing NA values:
+mean_value <- mean(data, na.rm = TRUE)
+
+Its output will be 3
+
+***I believe there are some other ways to do it, but this is the only one I was able to actually use in this use case.  
+
+#### Back to our movies...
+Normalized ratings representation up to 5 for the same movies according to IMDb.
+
+```{r imdb-ranking-displayed}
+normalized_imbd_rating_df = movies_df %>% group_by(movie_name) %>%
+  summarise(mean_rating = mean(round((imdb_ranking / 10) * 5), na.rm = TRUE))
+
+ggplot(normalized_imbd_rating_df, aes(x = movie_name, y = mean_rating, fill = movie_name)) + 
+  geom_bar(stat = "identity") + 
+  labs(x = "Movie Name", y = "imdb Average Rating") +
+  theme_minimal() + 
+  theme(axis.text.x = element_blank()) #make it look clean
+```
+
+There is a representation of now my frends' ranking is different from imdb ranking: 
+
+```{r imdb-vs-friends-ranking-displayed}
+library(tidyr)
+
+#only common values
+joined_movies <- inner_join(mean_ratings_df, normalized_imbd_rating_df, 
+                            by = "movie_name", 
+                            suffix = c(".mean_ratings_df", ".normalized_imbd_rating_df")) # which column from which table
+
+
+# long format
+long_movies <- joined_movies %>%
+  pivot_longer(cols = starts_with("mean_rating"), 
+               names_to = "source", 
+               values_to = "rating") %>%
+  mutate(source = recode(source, 
+                         "mean_rating.mean_ratings_df" = "Friends", 
+                         "mean_rating.normalized_imbd_rating_df" = "IMDb"))
+
+#data plot
+ggplot(long_movies, aes(x = movie_name, y = rating, fill = source)) + 
+  geom_bar(stat = "identity", position = position_dodge()) +
+  theme_minimal() +
+  labs(title = "Comparison of Friends' vs IMDb Rankings",
+       x = "Movie Name",
+       y = "Average Rating") +
+  scale_fill_manual(name = "Rating Source", values = c('Friends' = '#E75480', 'IMDb' = 'blue'))
+
+```
+
+#### Colclusion:
+Based on two graph graph “Friends’ Ranking vs IMDb Rankings,” we can conclude that:
+
+ - The movies “Back to Back” and “Joker: Folie à Deux” received higher ratings from the friends’ group compared to IMDb.
+ - “It Ends With Us” was rated higher by IMDb than by the friends’ group.
+ - “Nowhere” and “The Watchers” have similar ratings from both sources.
+This comparison shows how personal opinions from a group of friends can differ from the broader public consensus on IMDb. It highlights the subjective nature of movie ratings and how they can vary depending on the audience.
+
