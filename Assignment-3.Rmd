@@ -1,0 +1,141 @@
+---
+title: "Assignment-3"
+output: html_document
+date: "2024-09-18"
+author: "Inna Yedzinovich"
+---
+
+### Introduction: 
+
+1NF (Normal Form)
+ - Using row order to convey information is not permitted.
+ - Mixing data types within the same column is not permitted.
+ - Having a table without a primary key is not permitted.
+ - Repeating groups are not permitted
+ 
+2NF (Normal Form)
+Each non-key attribute in the table must be dependent on the entire primary key.
+
+3NF (Normal Form)
+Every non-key attribute in a table should depends on the key, the whole key, and nothing but the key. 
+
+4NF (Normal Form)
+Multivalued dependencies in a table must be multivalued on the key. 
+
+5NF (Normal Form)
+The table (which must be in 4NF) cannot be described as the logical result of joining some other tables togather. 
+
+
+#### Normalization
+
+Ask #1: Provide an example of at least three dataframes in R that demonstrate normalization. The dataframes can contain any data, either real or synthetic. Although normalization is typically done in SQL and relational databases, you are expected to show this example in R, as it is our main work environment in this course.
+
+```{r question-one-normalization}
+theater <- data.frame(
+  TheaterID = c(1, 2, 3, 4, 5),
+  TheaterName = c("Apollo Theater", "Ambassador Theatre", "August Wilson Theatre", "Apollo Theater", "Ambassador Theatre"),
+  Location = c("New York", "New York", "New York", "Chicago", "Los Angeles"),
+  Seats = c(1500, 1200, 1300, 1600, 1100),
+  Actors = c("John New York, Jane New York", "John New York", "John New York", "John Chicago", "John Los Angeles, Jane Los Angeles")
+)
+print(theater)
+
+# 1NF table example 
+# The table theater_1NF is in 1NF because it has no repeating groups or arrays. 
+theater_1NF <- data.frame(
+  TheaterID = c(1, 2, 3, 4, 5),
+  TheaterName = c("Apollo Theater", "Ambassador Theatre", "August Wilson Theatre", "Apollo Theater", "Ambassador Theatre"),
+  Location = c("New York", "New York", "New York", "Chicago", "Los Angeles"),
+  Seats = c(1500, 1200, 1300, 1600, 1100),
+  Actor = c("John New York", "John New York", "John New York", "John Chicago", "John Los Angeles")
+)
+print(theater_1NF)
+
+#In theater_1NF, Location and Actor attributes depend on TheaterName, not TheaterID. This means that Location and Actor are partially dependent on the primary key (TheaterID), which violates 2NF.
+
+# 2NF table example 
+# The table theater_2NF is in 2NF because it has no partial dependencies. The Location attribute has been moved to a separate location_2NF table.
+
+# Theater table
+theater_2NF <- data.frame(
+  TheaterID = c(1, 2, 3, 4, 5),
+  TheaterName = c("Apollo Theater", "Ambassador Theatre", "August Wilson Theatre", "Apollo Theater", "Ambassador Theatre"),
+  LocationID = c(1, 1, 1, 2, 3),
+  Seats = c(1500, 1200, 1300, 1600, 1100),
+  Actor = c("John New York", "John New York", "John New York", "John Chicago", "John Los Angeles")
+)
+
+# Location table
+location_2NF <- data.frame(
+  LocationID = c(1, 2, 3),
+  Location = c("New York", "Chicago", "Los Angeles")
+)
+
+print(theater_2NF)
+print(location_2NF)
+
+# In theater_2NF, the Actor attribute depends on the LocationID, which in turn depends on the TheaterID. This means Actor attribute does not dependent on the primary key (TheaterID), which violates 3NF.
+
+# 3NF table example 
+# The table theater_3NF is in 3NF because it has no transitive dependencies. The Actor attribute has been moved to a separate actor_3NF table, and the Location table now includes an ActorID to maintain the relationship.
+
+# Theater table
+theater_3NF <- data.frame(
+  TheaterID = c(1, 2, 3, 4, 5),
+  TheaterName = c("Apollo Theater", "Ambassador Theatre", "August Wilson Theatre", "Apollo Theater", "Ambassador Theatre"),
+  LocationID = c(1, 1, 1, 2, 3),
+  Seats = c(1500, 1200, 1300, 1600, 1100)
+)
+
+# Location table
+location_3NF <- data.frame(
+  LocationID = c(1, 2, 3),
+  Location = c("New York", "Chicago", "Los Angeles"),
+  ActorID = c(1, 2, 3)
+)
+
+# Manager table
+actor_3NF <- data.frame(
+  ActorID = c(1, 2, 3),
+  Actor = c("John New York", "John Chicago", "John Los Angeles")
+)
+
+print(theater_3NF)
+print(location_3NF)
+print(actor_3NF)
+
+```
+
+#### Character Manipulation
+
+2. Using the 173 majors listed in fivethirtyeight.com’s College Majors dataset [https://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/], provide code that identifies the majors that contain either "DATA" or "STATISTICS"
+
+```{r question-two-manipulation}
+library(knitr)
+library(readr)
+library(dplyr)
+library(stringr)
+urlfile <- "https://raw.githubusercontent.com/fivethirtyeight/data/refs/heads/master/college-majors/majors-list.csv"
+majors <- read.csv(urlfile)
+
+#filter data
+
+#pattern
+pattern <- c("DATA", "STATISTICS")
+majors_filtered <- majors %>% filter(str_detect(Major, regex(paste(pattern, collapse = "|"))))
+```
+
+3. Describe, in words, what these expressions will match:
+
+(.)\1\1 - it matches any character followed by itself two more times. example: aaa
+(.)(.)\\2\\1 - it matches two charactersfollowed by the second character and then the first character. example: anna
+(..)\1 - it matches any two characters (…) followed by the same two characters again. example: ANAN
+(.).\\1.\\1 - it matches one character that is following another character, and again the first character with the second character following the first one. Like this: anana - The character “a” is followed by any character “n”, then “a” again, another character “n”, and “a” once more
+(.)(.)(.).*\\3\\2\\1 - It looks for a pattern where the first three characters appear in reverse order somewhere else. example: abc...cba. 
+
+
+4. Construct regular expressions to match words that:
+ - Start and end with the same character. \b(.).*\1\b
+ - Contain a repeated pair of letters (e.g. "church" contains "ch" repeated twice.) \b.*(\w\w).*\1.*\b
+ - Contain one letter repeated in at least three places (e.g. "eleven" contains three "e"s.) \b.*(\w).*\1.*\1.*\b
+
