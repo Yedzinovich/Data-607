@@ -1,0 +1,31 @@
+---
+title: "Project 1"
+output: html_document
+date: "2024-09-25"
+author: "Inna Yedzinovich"
+---
+
+```{r read-from-csv}
+library(tidyverse)
+
+url <- "https://raw.githubusercontent.com/Yedzinovich/Data-607/main/project_1.csv"
+flight_info <- read_csv(url)
+
+
+
+# Gather the data into long format
+flight_info <- flight_info %>%
+  rownames_to_column(var = "Airline_Status") %>%
+  separate(Airline_Status, into = c("Airline", "Status"), sep = " ")
+
+# Gather the city columns into key-value pairs
+tidy_flight_info <- flight_info %>%
+  pivot_longer(cols = -c(Airline, Status), names_to = "City", values_to = "count")
+
+
+
+# View the tidy data
+head(tidy_data)
+
+
+```

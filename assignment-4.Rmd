@@ -1,0 +1,41 @@
+---
+title: "Project 1"
+output: html_document
+date: "2024-09-25"
+author: "Inna Yedzinovich"
+---
+
+```{r read-from-csv}
+library(tidyverse)
+library(knitr)
+
+url <- "https://raw.githubusercontent.com/Yedzinovich/Data-607/main/assignment-4.csv"
+flights <- read_csv(url, show_col_types = FALSE)
+print(flights)
+kable(flights)
+
+flights_long <- flights %>%
+  pivot_longer(cols = starts_with("Los Angeles"):starts_with("Seattle"), names_to = "City", values_to = "Flights")
+print(flights_long)
+kable(flights_long)
+
+flights_final_transformation = flights_long %>% pivot_wider(names_from = Status, values_from = Flights)
+print(flights_final_transformation)
+kable(flights_final_transformation)
+
+flights_summary <- flights_final_transformation %>%
+  mutate(Delay = as.numeric(Delay)) %>%
+  group_by(Airline) %>%
+  summarize(Total_Delays = sum(Delay, na.rm = TRUE), Total_On_Time = sum(`On Time`, na.rm = TRUE)) %>%
+  mutate(Total_Flights = Total_Delays + Total_On_Time,
+         Delay_Percentage = (Total_Delays / Total_Flights) * 100,
+         On_Time_Percentage = (Total_On_Time / Total_Flights) * 100)
+print(flights_summary)
+kable(flights_summary)
+
+```
+
+#### Conclusion 
+ - AM West has a higher total number of flights and a slightly better on-time performance compared to Alaska.
+ - Alaska has a higher percentage of delays compared to AM West.
+ 
