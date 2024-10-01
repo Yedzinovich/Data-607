@@ -39,3 +39,11 @@ kable(flights_summary)
  - AM West has a higher total number of flights and a slightly better on-time performance compared to Alaska.
  - Alaska has a higher percentage of delays compared to AM West.
  
+Based on the provided information, AM West seems to be the better choice for me the following reasons:
+
+ - Higher Total Number of Flights which means that AM West has a more extensive network and more frequent flights. 
+ - Better On-Time Performance means that AM West is more reliable. 
+ - Lower Percentage of Delays since Alaska tends to have a higher percentage of delays compare to AM West, so flying with AM West reduces the possibility of having delays. 
+ 
+ 
+ 
