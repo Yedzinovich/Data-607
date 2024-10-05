@@ -1,0 +1,358 @@
+---
+title: "Project Number One"
+output: html_document
+date: "2024-10-01"
+author: "Inna Yedzinovich"
+---
+
+## Introducion
+
+In this project the goal is to take a text file with chess tournament results, clean it up, and turn it into a data frame or CSV file for analysis. The final dataset should have 64 records
+
+#### Example: 
+
+```{r example}
+options(repos = c(CRAN = "https://cran.r-project.org"))
+
+example_df <- data.frame(rbind(c("Gary Hua", "ON", 6.0, 1794, 1605)))
+names(example_df) <- c("PlayerName", "State", "TotalPoints", "PreRating", "AvgOppPreRating")
+
+knitr::kable(example_df)
+```
+
+```{r initial-setup }
+suppressPackageStartupMessages(library(dplyr))
+library(readr)
+library(stringr)
+
+url <- "https://raw.githubusercontent.com/Yedzinovich/Data-607/main/chess.txt"
+chess_lines <- read_lines(url)
+print(chess_lines)
+
+```
+
+Let’s analyze this data to uncover meaningful insights from this seemingly random string of characters. Since I’m unsure of the next steps, I’ll use some probing techniques to explore any potential actions we can take. 
+
+```{r try-something-one}
+chess_text <- c(chess_lines)
+print(chess_text)
+```
+
+Alright, this didn’t help and appears to have the same effect.
+
+Let's try anything else using https://www.tidytextmining.com/tidytext as a reference. 
+
+Let’s calculate the number of lines first and then use the tibble() function to see if we can extract any useful insights from the data.
+
+```{r try-something-two}
+lines <- strsplit(chess_text, "\n")[]
+num_lines <- length(lines)
+print(num_lines)
+
+library(dplyr)
+chess_text_df <- tibble(line = 1:num_lines, text = chess_text)
+
+print(chess_text_df)
+```
+
+It’s clear that lines [1, 4, 7, 10 …] in this sequence are not useful, so let’s remove them.
+
+```{r try-something-two-remove-useless-lines}
+lines_to_remove <- seq(1, num_lines, by = 3)
+filtered_chess_text_df <- chess_text_df %>% filter(!line %in% lines_to_remove)
+
+print(filtered_chess_text_df)
+```
+
+It appears the first two lines serve as the header for our dataframe. Let’s try using the unnest_tokens() function to convert our messy string into ‘word’ tokens and see if we can make it more manageable. 
+
+```{r try-something-two-make-tokens}
+install.packages("tidytext")
+library(tidytext)
+library(tidyverse)
+
+token_chess_text_df <- filtered_chess_text_df %>% unnest_tokens(word, text)
+print(token_chess_text_df)
+```
+
+It seems there are no discernible patterns to automatically create a header, so let’s try to define it manually.
+
+What we need:
+
+- Player’s Name
+- Player’s State
+- Total Number of Points
+- Player’s Pre-Rating
+- Average Pre Chess Rating of opponent
+
+These will correspond to the columns in our dataframe
+
+- player_name
+- player_state
+- total_num_of_points
+- player_pre_rating
+- average_pre_chess_rating_of_opponent
+
+```{r try-something-two-manual-header}
+column_names <- c("player_name", "player_state", "total_num_of_points", "player_pre_rating", "average_pre_chess_rating_of_opponent") #vector with names
+print(column_names)
+
+our_chess_df <- data.frame(matrix(ncol = length(column_names), nrow = 0))
+colnames(our_chess_df) <- column_names
+
+print(our_chess_df)
+
+```
+
+Let’s clean token_chess_text_df by removing the header data, as it’s no longer needed.
+
+```{r try-something-two-clean-token_chess_text_df}
+print(token_chess_text_df, n = 35)
+token_chess_text_df <- token_chess_text_df[!token_chess_text_df$line %in% c(2, 3), ]
+print(token_chess_text_df, n = 100)
+
+```
+
+Aha, it seems we need an additional column named opponent to store information about the opponent, and an id column to uniquely identify each player.
+
+```{r try-something-two-manipulate-our-df}
+column_names <- c("id", "player_name", "player_state", "total_num_of_points", "player_pre_rating", "opponent")
+print(column_names)
+
+our_chess_df <- data.frame(matrix(ncol = length(column_names), nrow = 0))
+colnames(our_chess_df) <- column_names
+
+```
+
+Now, let's loop over the dataframe to extract and populate data for each player
+
+```{r try-something-two-loop-over-dataframe}
+start_lines <- seq(5, max(token_chess_text_df$line), by = 3)
+print(start_lines) #start of each new player
+id_counter <- 1
+
+for (line in start_lines) {
+  print(line)
+  player_name <- paste(token_chess_text_df$word[token_chess_text_df$line == line][2:3], collapse = " ")
+  print(player_name)
+  
+  player_state <- token_chess_text_df$word[token_chess_text_df$line == line + 1][1]
+  print(player_state)
+
+  total_num_of_points <- token_chess_text_df$word[token_chess_text_df$line == line + 3][4]
+  print(total_num_of_points)
+  
+  player_pre_rating <- token_chess_text_df$word[token_chess_text_df$line == line + 1][4]
+  print(player_pre_rating)
+  
+  opponent_indices <- seq(6, length(token_chess_text_df$word[token_chess_text_df$line == line]), by = 2)
+  print(opponent_indices)
+
+  opponent <- paste(token_chess_text_df$word[token_chess_text_df$line == line][opponent_indices], collapse = ", ")
+  print(opponent)
+  
+  our_chess_df <- rbind(our_chess_df, data.frame(
+    id = id_counter,
+    player_name = player_name,
+    player_state = player_state,
+    total_num_of_points = total_num_of_points,
+    player_pre_rating = player_pre_rating,
+    opponent = as.character(opponent),  # Ensure string
+    stringsAsFactors = FALSE
+  ))
+  
+  id_counter <- id_counter + 1
+}
+
+print(our_chess_df)
+```
+
+Well, as we can see, the following logic does not work because some people have their middle names listed.
+
+Let’s explore other options. I’d like to keep the header setup unchanged, as I don’t see an alternative way to define it.
+
+```{r try-something-three}
+chess_text <- c(chess_lines)
+print(chess_text)
+
+column_names <- c("id", "player_name", "player_state", "total_num_of_points", "player_pre_rating", "opponent")
+print(column_names)
+
+our_chess_df <- data.frame(matrix(ncol = length(column_names), nrow = 0))
+colnames(our_chess_df) <- column_names
+
+# Let's split the raw data into new lines
+lines <- unlist(strsplit(chess_lines, "\n"))
+
+# Filter out the lines that contain player data by using regex pattern that is used to identify lines that begin with an optional whitespace, followed by a number, a space, and then a pipe character.
+player_lines_one <- lines[grepl("^\\s*\\d+ \\|", lines)]
+player_lines_two <- lines[grepl("^\\s*[A-Z]{2} \\|", lines)]
+
+# Create a tibble from the player lines similar to the way we did before
+player_tibble_one <- tibble(text = player_lines_one)
+player_tibble_two <- tibble(text = player_lines_two)
+
+## loop over each raw and get the information
+for (i in seq(1, nrow(player_tibble_one), by = 1)) {
+    player_info_one <- unlist(strsplit(player_tibble_one$text[i], "\\|"))
+    print(player_info_one)
+    
+    player_info_two <- unlist(strsplit(player_tibble_two$text[i], "\\|"))
+    print(player_info_two)
+    
+    player_name <- player_info_one[2]
+    print(player_name)
+  
+    player_state <- player_info_two[1]
+    print(player_state)
+
+    total_num_of_points <- player_info_one[3]
+    print(total_num_of_points)
+  
+    player_pre_rating_dirty <- player_info_two[2]
+    pattern <- "R:\\s*(\\d{3,4})"
+    matches <- regmatches(player_pre_rating_dirty, regexec(pattern, player_pre_rating_dirty))
+    player_pre_rating <- as.integer(matches[[1]][2])
+    print(player_pre_rating)
+
+    pattern <- "[WD]\\s+(\\d+)"
+    matches <- regmatches(player_info_one, gregexpr(pattern, player_info_one))
+    opponent_one <- as.numeric(unlist(lapply(matches, function(x) gsub("[WD]\\s+", "", x))))
+    print(opponent_one)
+    
+    pattern <- "[WD]\\s+(\\d+)"
+    matches <- regmatches(player_info_two, gregexpr(pattern, player_info_two))
+    opponent_two <- as.numeric(unlist(lapply(matches, function(x) gsub("[WD]\\s+", "", x))))
+    print(opponent_two)
+    
+    opponent <- c(opponent_one, opponent_two)
+    print(opponent)
+  
+    our_chess_df <- rbind(our_chess_df, data.frame(
+      id = player_info_one[1],
+      player_name = player_name,
+      player_state = player_state,
+      total_num_of_points = total_num_of_points,
+      player_pre_rating = player_pre_rating,
+      opponent = opponent,
+      stringsAsFactors = FALSE
+    ))
+    
+}
+
+print(our_chess_df)
+
+```
+
+Now that our intermediate table is ready, let’s proceed to create our final table.
+
+```{r final-table}
+column_names <- c("player_name", "player_state", "total_num_of_points", "player_pre_rating", "average_pre_chess_rating_of_opponent")
+
+our_final_chess_df <- data.frame(matrix(ncol = length(column_names), nrow = 0))
+colnames(our_final_chess_df) <- column_names
+
+our_chess_df$player_pre_rating <- as.numeric(our_chess_df$player_pre_rating)
+our_chess_df_desc <- our_chess_df %>% arrange(desc(id))
+
+df_opponents <- data.frame(
+  id = numeric(),
+  average_pre_chess_rating_of_opponent = numeric()
+)
+
+# Initialize variables
+current_id <- 0
+sum <- 0
+count_opponents <- 0
+
+# Create an empty data frame for results
+df_opponents <- data.frame(
+  id = integer(),
+  average_pre_chess_rating_of_opponent = numeric()
+)
+
+# Iterate over the rows of our_chess_df_desc
+for (i in 1:nrow(our_chess_df_desc)) {
+  if (current_id != our_chess_df_desc$id[i] && current_id != 0) {
+    print(current_id)
+    print(sum)
+    
+    df_opponents <- rbind(df_opponents, data.frame(
+      id = current_id,
+      average_pre_chess_rating_of_opponent = sum / count_opponents
+    ))
+    
+    current_id <- our_chess_df_desc$id[i]
+    sum <- 0
+    count_opponents <- 0
+  }
+  
+  current_opponent_id <- our_chess_df_desc$opponent[i]
+  sum <- sum + our_chess_df_desc$player_pre_rating[current_opponent_id]
+  count_opponents <- count_opponents + 1
+  
+  if (current_id == 0) {
+    current_id <- our_chess_df_desc$id[i]
+  }
+}
+
+if (current_id != 0) {
+  df_opponents <- rbind(df_opponents, data.frame(
+    id = current_id,
+    average_pre_chess_rating_of_opponent = sum / count_opponents
+  ))
+}
+
+print(df_opponents)
+
+merged_df <- our_chess_df %>% left_join(df_opponents, by = "id")
+print(merged_df)
+
+selected_columns <- merged_df %>%
+  select(player_name, player_state, total_num_of_points, player_pre_rating, average_pre_chess_rating_of_opponent)
+print(selected_columns)
+
+our_final_chess_df <- selected_columns %>% distinct()
+print(our_final_chess_df)
+
+```
+Let me try to do the same but without for-loop. 
+
+```{r no-for-loop}
+# column_names <- c("player_name", "player_state", "total_num_of_points", "player_pre_rating", "average_pre_chess_rating_of_opponent")
+# 
+# our_final_chess_df <- data.frame(matrix(ncol = length(column_names), nrow = 0))
+# colnames(our_final_chess_df) <- column_names
+# 
+# our_chess_df$player_pre_rating <- as.numeric(our_chess_df$player_pre_rating)
+# 
+# df_opponents <- our_chess_df %>%
+#   group_by(id) %>%
+#   summarize(average_pre_chess_rating_of_opponent = mean(player_pre_rating[match(opponent, id)], na.rm = TRUE))
+# !!!!!issue is here df_opponents !!!!
+# 
+# merged_df <- our_chess_df %>%
+#   left_join(df_opponents, by = "id")
+# 
+# selected_columns <- merged_df %>%
+#   select(player_name, player_state, total_num_of_points, player_pre_rating, average_pre_chess_rating_of_opponent)
+# 
+# our_final_chess_df <- selected_columns %>% distinct()
+# print(our_final_chess_df)
+
+
+```
+Unfortunately, this approach isn’t working due to issues with calculating the mean value. It seems that using a loop is a more effective solution for this task. Please disregard the previous method.
+
+Now, we need to store our dataframe in .CSV file. Let us do it. 
+
+``` {r dataframe-to-excel}
+write.csv(our_final_chess_df, "final_chess_data.csv", row.names = FALSE)
+
+```
+
+### Conculusion
+
+String manipulation to find patterns with regex and extract necessary data is quite challenging. Hopefully, people will stop storing data in text files in incredibly inconvenient formats. There are so many better tools available, such as Excel, databases, or even Word tables or Microsoft Access, that make data handling much easier.
+
+I dedicated 25 hours to complete this task, and I hope it proves valuable. Thank you!
