@@ -355,4 +355,4 @@ write.csv(our_final_chess_df, "final_chess_data.csv", row.names = FALSE)
 
 String manipulation to find patterns with regex and extract necessary data is quite challenging. Hopefully, people will stop storing data in text files in incredibly inconvenient formats. There are so many better tools available, such as Excel, databases, or even Word tables or Microsoft Access, that make data handling much easier.
 
-I dedicated 25 hours to complete this task, and I hope it proves valuable. Thank you!
+Thank you!
