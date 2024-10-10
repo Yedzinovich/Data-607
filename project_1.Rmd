@@ -215,14 +215,14 @@ for (i in seq(1, nrow(player_tibble_one), by = 1)) {
     player_pre_rating <- as.integer(matches[[1]][2])
     print(player_pre_rating)
 
-    pattern <- "[WD]\\s+(\\d+)"
+    pattern <- "[WDL]\\s+(\\d+)"
     matches <- regmatches(player_info_one, gregexpr(pattern, player_info_one))
-    opponent_one <- as.numeric(unlist(lapply(matches, function(x) gsub("[WD]\\s+", "", x))))
+    opponent_one <- as.numeric(unlist(lapply(matches, function(x) gsub("[WDL]\\s+", "", x))))
     print(opponent_one)
     
     pattern <- "[WD]\\s+(\\d+)"
     matches <- regmatches(player_info_two, gregexpr(pattern, player_info_two))
-    opponent_two <- as.numeric(unlist(lapply(matches, function(x) gsub("[WD]\\s+", "", x))))
+    opponent_two <- as.numeric(unlist(lapply(matches, function(x) gsub("[WDL]\\s+", "", x))))
     print(opponent_two)
     
     opponent <- c(opponent_one, opponent_two)
@@ -354,5 +354,7 @@ write.csv(our_final_chess_df, "final_chess_data.csv", row.names = FALSE)
 ### Conculusion
 
 String manipulation to find patterns with regex and extract necessary data is quite challenging. Hopefully, people will stop storing data in text files in incredibly inconvenient formats. There are so many better tools available, such as Excel, databases, or even Word tables or Microsoft Access, that make data handling much easier.
+
+While text files with complex formats can store data, they lack the structure, efficiency, and features provided by Excel and databases. Using Excel or databases ensures better data organization, manipulation, validation, scalability, security, collaboration, and backup capabilities. These advantages make Excel and databases the preferred choice for storing and managing data effectively.
 
 Thank you!

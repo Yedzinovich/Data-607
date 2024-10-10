@@ -1,0 +1,143 @@
+---
+title: "project-2"
+output: html_document
+date: "2024-10-10"
+---
+
+### Dataset #2: Unity Data - MTA Daily Ridership 
+
+Data Overview
+The dataset contains daily ridership and traffic data for various transportation modes in New York City during March 2020. The columns include:
+
+ - Date: The date of the record.
+ - Subways: Total estimated ridership and percentage of comparable pre-pandemic day.
+ - Buses: Total estimated ridership and percentage of comparable pre-pandemic day.
+ - LIRR (Long Island Rail Road): Total estimated ridership and percentage of comparable pre-pandemic day.
+ - Metro-North: Total estimated ridership and percentage of comparable pre-pandemic day.
+ - Access-A-Ride: Total scheduled trips and percentage of comparable pre-pandemic day.
+ - Bridges and Tunnels: Total traffic and percentage of comparable pre-pandemic day.
+ - Staten Island Railway: Total estimated ridership and percentage of comparable pre-pandemic day.
+ 
+Initial Analysis:  
+ - There is a noticeable decline in ridership across all transportation modes as the month progresses. 
+ - The percentage of ridership compared to pre-pandemic levels shows a significant decline. 
+ - Access-A-Ride: This services maintained higher percentages of pre-pandemic levels compared to other modes, indicating continued demand for these services despite the pandemic
+ - Traffic through bridges and tunnels also decreased but not as drastically as public transportation ridership. This could suggest a shift towards private vehicle usege during the pandemic. 
+ 
+```{r MAT-Riders-DataSet}
+library(tidyr)
+library(dplyr)
+library(readr)
+library("ggplot2")
+
+
+mta_data <- read_csv("MTA_Daily_Ridership_Data.csv")
+mta_data <- mta_data %>% mutate(Date = as.Date(Date, format = "%m/%d/%y"))
+
+mta_data_long <- mta_data %>% pivot_longer(cols = -Date, names_to = "Metric", values_to = "Value")
+head(mta_data_long)
+
+mta_data_long <- mta_data_long %>% separate(Metric, into = c("Transport_Mode", "Metric_Type"), sep = ": ")
+head(mta_data_long)
+```
+
+Now that we have the data in a long format, we can extract more comprehensive insights from it. Long format can help us to perform a variety of analyses that are more flexible and insightful compared to the original wide format. 
+
+***What do know: 
+ - March 11, 2020, marks the start of the federal COVID-19 PHE declaration.
+ - May 11, 2023, marks the end of the federal COVID-19 PHE declaration.
+   Source:https://archive.cdc.gov/www_cdc_gov/coronavirus/2019-ncov/your-health/end-of-phe.html#:~:text=The%20federal%20COVID%2D19%20PHE,and%20testing%2C%20will%20remain%20available.
+   
+```{r MAT-Riders-DataSet-Analysis}
+# Analysis #1
+avg_ridership <- mta_data_long %>%
+  filter(Metric_Type == "Total Estimated Ridership") %>%
+  group_by(Transport_Mode) %>%
+  summarize(Average_Ridership = mean(Value, na.rm = TRUE))
+
+print(avg_ridership)
+
+# Analysis #2
+ggplot(mta_data_long %>% filter(Metric_Type == "Total Estimated Ridership"), aes(x = Date, y = Value, color = Transport_Mode)) +
+  geom_point() +
+  labs(title = "Public Transportation Ridership Trends Over Time", x = "Date", y = "Total Estimated Ridership")
+
+# Analysis #3
+percentage_mta_data <- mta_data_long %>%
+  filter(grepl("% of Comparable Pre-Pandemic Day", Metric_Type))
+
+ggplot(percentage_mta_data, aes(x = Date, y = Value, color = Transport_Mode)) +
+  geom_point() +
+  labs(title = "Percentage of Pre-Pandemic Levels Over Time",
+       x = "Date",
+       y = "Percentage of Pre-Pandemic Levels",
+       color = "Transport Mode")
+
+# Analysis 4
+pt_mta_ridership_data <- mta_data_long %>%
+  filter(Metric_Type == "Total Estimated Ridership")
+
+ggplot(pt_mta_ridership_data %>% filter(Transport_Mode %in% c("Subways", "Buses")), 
+       aes(x = Date, y = Value, color = Transport_Mode)) +
+  geom_point() +
+  labs(title = "Ridership Trends Over Time: Subways vs Buses",
+       x = "Date",
+       y = "Total Estimated Ridership",
+       color = "Transport Mode") 
+
+# Calculate the average ridership for each transport mode during the pandemic
+avg_ridership_pandemic <- pt_mta_ridership_data %>%
+  filter(Date >= as.Date("2020-03-01") & Date <= as.Date("2023-05-11")) %>%
+  group_by(Transport_Mode) %>%
+  summarize(Average_Ridership = mean(Value, na.rm = TRUE))
+
+print(avg_ridership_pandemic)
+
+# Analysis 5
+pre_pandemic <- pt_mta_ridership_data %>%
+  filter(Date >= as.Date("2020-03-01") & Date <= as.Date("2020-03-11"))
+print(pre_pandemic)
+
+post_pandemic <- pt_mta_ridership_data %>%
+  filter(Date >= as.Date("2023-05-12") & Date <= as.Date("2024-10-10"))
+print(post_pandemic)
+
+avg_pre_pandemic <- pre_pandemic %>%
+  group_by(Transport_Mode) %>%
+  summarize(Average_Ridership_Pre = mean(Value, na.rm = TRUE))
+print(avg_pre_pandemic)
+
+avg_post_pandemic <- post_pandemic %>%
+  group_by(Transport_Mode) %>%
+  summarize(Average_Ridership_Post = mean(Value, na.rm = TRUE))
+print(avg_post_pandemic)
+
+avg_ridership <- merge(avg_pre_pandemic, avg_post_pandemic, by = "Transport_Mode")
+print(avg_ridership)
+
+avg_ridership <- avg_ridership %>%
+  mutate(Percentage_Change = ((Average_Ridership_Post - Average_Ridership_Pre) / Average_Ridership_Pre) * 100)
+print(avg_ridership)
+
+ggplot(avg_ridership, aes(x = Transport_Mode, y = Percentage_Change, fill = Transport_Mode)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Percentage Change in Ridership Due to COVID-19",
+       x = "Transport Mode",
+       y = "Percentage Change in Ridership")
+```
+#### Analysis: 
+##### 1- Analyze the average ridership for each transport mode.
+The data shows that subways have the most riders, with about 2.48 million people using them daily, much more than other types of transport. Buses come next, with around 1 million riders each day, making them very important. LIRR and Metro-North have fewer riders, with around 134,000 and 113,000 daily, since they serve commuters in specific regions. Staten Island Railway has the fewest riders, just over 4,000, likely because it covers a smaller area. Overall, subways and buses are the main ways people get around in the city.
+
+##### 2- Analyze how ridership for different transportation modes changes over time. This can help identify patterns, such as the impact of the COVID-19 pandemic on public transportation usage.
+As we can see, the chart shows public transportation ridership trends from 2020 to 2024, highlighting a sharp drop across all modes in early 2020 due to the COVID-19 pandemic, with subway ridership (in purple) experiencing the most significant decline. Ridership began recovering mid-2020, with buses showing a steadier recovery compared to the more volatile subway data. Regional transport modes like LIRR, Metro-North, and Staten Island Railway have consistently lower ridership. The chart reveals that, despite gradual recovery, ridership across all modes has not fully returned to pre-pandemic levels by 2024.
+    
+##### 3- Analyze how the percentage of ridership compared to pre-pandemic levels changes over time for each transportation mode.
+The chart shows that public transportation usage dropped sharply during the pandemic but has been recovering at different rates across transport modes from 2020 to 2024. Bridges and tunnels saw the fastest recovery, exceeding 100% of pre-pandemic levels by 2021, indicating a shift towards car travel. Access-A-Ride and buses gradually returned to normal, nearing or slightly surpassing pre-pandemic levels by 2024. However, commuter services like the LIRR, Metro-North, and Staten Island Railway have been slower to recover, remaining below 100%, likely due to changes in work patterns. Subways are also recovering slowly, still below pre-pandemic levels by 2024.
+
+##### 4- Analyze the ridership trends between different transportation modes (subways vs buses) to see which modes were more resilient during the pandemic.
+The graph shows that both subway and bus ridership dropped sharply at the start of 2020 due to the pandemic. Subways saw a bigger drop than buses, but they have been recovering faster. By 2024, subway ridership has risen back to over 2 million, though it fluctuates more, while bus ridership has stayed steadier but remains below 2 million. Overall, subways have more riders than buses, but buses have a more stable number of users over time.
+
+##### 5- Analyze the impact of the COVID-19 pandemic on ridership by comparing pre-pandemic and post-pandemic data.
+The graph illustrates that most MTA transportation systems experienced a decline in ridership due to the COVID-19 pandemic, with Staten Island Railroad suffering the largest decrease, with over 50% fewer passengers. In contrast, Metro-North has seen an increase in ridership, likely due to people relocating from New York City during the pandemic and opting to commute using Metro-North.
+
