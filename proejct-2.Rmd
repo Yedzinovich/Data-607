@@ -25,13 +25,15 @@ Initial Analysis:
  - Traffic through bridges and tunnels also decreased but not as drastically as public transportation ridership. This could suggest a shift towards private vehicle usege during the pandemic. 
  
 ```{r MAT-Riders-DataSet}
+options(repos = c(CRAN = "https://cran.r-project.org"))
 library(tidyr)
-library(dplyr)
+suppressPackageStartupMessages(library(dplyr))
 library(readr)
 library("ggplot2")
 
+url <- "https://raw.githubusercontent.com/Yedzinovich/Data-607/main/MTA_Daily_Ridership_Data.csv"
 
-mta_data <- read_csv("MTA_Daily_Ridership_Data.csv")
+mta_data <- read_csv(url)
 mta_data <- mta_data %>% mutate(Date = as.Date(Date, format = "%m/%d/%y"))
 
 mta_data_long <- mta_data %>% pivot_longer(cols = -Date, names_to = "Metric", values_to = "Value")

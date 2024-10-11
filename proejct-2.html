@@ -386,23 +386,17 @@ to other modes, indicating continued demand for these services despite
 the pandemic - Traffic through bridges and tunnels also decreased but
 not as drastically as public transportation ridership. This could
 suggest a shift towards private vehicle usege during the pandemic.</p>
-<pre class="r"><code>library(tidyr)
-library(dplyr)</code></pre>
-<pre><code>## 
-## Attaching package: &#39;dplyr&#39;</code></pre>
-<pre><code>## The following objects are masked from &#39;package:stats&#39;:
-## 
-##     filter, lag</code></pre>
-<pre><code>## The following objects are masked from &#39;package:base&#39;:
-## 
-##     intersect, setdiff, setequal, union</code></pre>
-<pre class="r"><code>library(readr)
+<pre class="r"><code>options(repos = c(CRAN = &quot;https://cran.r-project.org&quot;))
+library(tidyr)
+suppressPackageStartupMessages(library(dplyr))
+library(readr)
 library(&quot;ggplot2&quot;)
 
+url &lt;- &quot;https://raw.githubusercontent.com/Yedzinovich/Data-607/main/MTA_Daily_Ridership_Data.csv&quot;
 
-mta_data &lt;- read_csv(&quot;MTA_Daily_Ridership_Data.csv&quot;)</code></pre>
-<pre><code>## Rows: 1671 Columns: 15</code></pre>
-<pre><code>## ── Column specification ────────────────────────────────────────────────────────
+mta_data &lt;- read_csv(url)</code></pre>
+<pre><code>## Rows: 1671 Columns: 15
+## ── Column specification ────────────────────────────────────────────────────────
 ## Delimiter: &quot;,&quot;
 ## chr  (1): Date
 ## dbl (14): Subways: Total Estimated Ridership, Subways: % of Comparable Pre-P...
