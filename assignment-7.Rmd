@@ -15,7 +15,7 @@ Ask: "This data will be used for inventory analysis at the retailer. You are req
 for analysis by formatting it in JSON, HTML, XML, and Parquet. Additionally, provide the pros
 and cons of each format."
 
-Let's create a datafrom from the procided data: 
+Let’s create a dataframe from the provided data:
 
 ```{r}
 library(tibble)
@@ -47,7 +47,7 @@ electronics_df <- tibble::tribble(
 print(electronics_df)
 ```
 
-Create a JSON file from this dataset. 
+Generate a JSON file from this dataset.
 
 ```{r}
 library(jsonlite)
@@ -55,5 +55,23 @@ json_data <- toJSON(electronics_df, pretty = TRUE)
 write(json_data, file = "electronics.json")
 ```
 
-Save this json data info github. 
-GitHub Link: 
+Save the JSON file in github. 
+GitHub Link: https://raw.githubusercontent.com/Yedzinovich/Data-607/refs/heads/main/electronics.json
+
+Let’s load our generated JSON file into a dataframe named electronics_json.
+
+```{r}
+library(jsonlite)
+electronics_json <- fromJSON("https://raw.githubusercontent.com/Yedzinovich/Data-607/refs/heads/main/electronics.json")
+print(electronics_json)
+```
+
+I am going to use JSON file and format converter to make it into HTML format. 
+Let's read from out generated HTML file into a data frame - electronics_html
+
+
+```{r}
+library(jsonlite)
+electronics_json <- fromJSON("https://raw.githubusercontent.com/Yedzinovich/Data-607/refs/heads/main/electronics.json")
+print(electronics_json)
+```
