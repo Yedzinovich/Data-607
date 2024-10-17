@@ -66,12 +66,17 @@ electronics_json <- fromJSON("https://raw.githubusercontent.com/Yedzinovich/Data
 print(electronics_json)
 ```
 
-I am going to use JSON file and format converter to make it into HTML format. 
-Let's read from out generated HTML file into a data frame - electronics_html
-
+I will use a JSON file and a format converter to transform it into HTML format. Let’s then read our generated HTML file into a dataframe named electronics_html. 
 
 ```{r}
-library(jsonlite)
-electronics_json <- fromJSON("https://raw.githubusercontent.com/Yedzinovich/Data-607/refs/heads/main/electronics.json")
-print(electronics_json)
+library(rvest)
+library(dplyr)
+
+url <- "https://raw.githubusercontent.com/Yedzinovich/Data-607/refs/heads/main/electronics_html.html"
+html_content <- read_html(url)
+
+electronics_html <- html_content %>%
+  html_node("table") %>%
+  html_table(fill = TRUE)
+print(electronics_html)
 ```
