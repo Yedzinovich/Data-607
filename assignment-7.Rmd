@@ -58,6 +58,7 @@ write(json_data, file = "electronics.json")
 Save the JSON file in github. 
 GitHub Link: https://raw.githubusercontent.com/Yedzinovich/Data-607/refs/heads/main/electronics.json
 
+####1 - JSON
 Let’s load our generated JSON file into a dataframe named electronics_json.
 
 ```{r}
@@ -66,6 +67,7 @@ electronics_json <- fromJSON("https://raw.githubusercontent.com/Yedzinovich/Data
 print(electronics_json)
 ```
 
+####2 - HTML
 I will use a JSON file and a format converter to transform it into HTML format. Let’s then read our generated HTML file into a dataframe named electronics_html. 
 
 ```{r}
@@ -81,7 +83,34 @@ electronics_html <- html_content %>%
 print(electronics_html)
 ```
 
+#### 3- XML
 I will use a JSON file and a format converter to transform it into XML format. Let’s then read our generated XML file into a dataframe named electronics_xml. 
 
 ```{r}
+library(xml2)
+url <- "https://raw.githubusercontent.com/Yedzinovich/Data-607/refs/heads/main/electronics_xml.xml"
+xml_content <- read_xml(url)
+items <- xml_find_all(xml_content, "//item")
+print(items)
+
+categories <- xml_text(xml_find_all(items, "Category"))
+item_names <- xml_text(xml_find_all(items, "Item_Name"))
+item_ids <- xml_text(xml_find_all(items, "Item_ID"))
+brands <- xml_text(xml_find_all(items, "Brand"))
+prices <- xml_text(xml_find_all(items, "Price"))
+series_ids <- xml_text(xml_find_all(items, "Series_ID"))
+series_details <- xml_text(xml_find_all(items, "Series_Details"))
+
+electronics_xml <- data.frame(
+  Category = categories,
+  Item_Name = item_names,
+  Item_ID = item_ids,
+  Brand = brands,
+  Price = prices,
+  Series_ID = series_ids,
+  Series_Details = series_details,
+  stringsAsFactors = FALSE
+)
+
+print(electronics_xml)
 ```
