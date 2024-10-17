@@ -114,3 +114,39 @@ electronics_xml <- data.frame(
 
 print(electronics_xml)
 ```
+
+#### 4 - Parquet
+I will use a JSON file and a format converter to transform it into Parquet format. Let’s then read our generated Parquet file into a dataframe named electronics_parquet. 
+
+```{r}
+library(arrow)
+url <- "https://raw.githubusercontent.com/Yedzinovich/Data-607/refs/heads/main/electronics.parquet"
+
+temp_file <- tempfile(fileext = ".parquet")
+download.file(url, temp_file, mode = "wb")
+
+electronics_parquet <- read_parquet(temp_file)
+print(electronics_parquet)
+```
+
+### Conclusion 
+
+#### JSON (JavaScript Object Notation)
+  Pros: Easy to read, lightweight, widely supported.
+  Cons: Can be large, no schema, limited data types.
+  
+#### HTML (HyperText Markup Language)
+Pros: Great for web pages, rich formatting.
+Cons: Not for data storage, bulky, limited structure.
+
+#### XML (eXtensible Markup Language)
+Pros: Self-descriptive, flexible, supports schema.
+Cons: Very large, complex to parse, slower.
+
+#### Parquet
+Pros: Efficient storage, good compression, fast for big data.
+Cons: Not human-readable, complex tools needed, less support.
+
+In conclusion, choosing the right data format depends on our specific needs and context. JSON is ideal for lightweight data interchange due to its simplicity and readability. HTML excels in presenting data on web pages with rich formatting options. XML offers flexibility and self-descriptive tags, making it suitable for complex hierarchical data structures, though it can be verbose and slower to process. Parquet stands out for its efficiency in storing and processing large-scale data, especially in analytical scenarios, despite requiring more sophisticated tools and being less human-readable.
+
+Each format has its unique strengths and weaknesses, making them suitable for different applications. 
