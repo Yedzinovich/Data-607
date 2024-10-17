@@ -1,0 +1,59 @@
+---
+title: "Assignment 7"
+output: html_document
+date: "2024-10-15"
+author: "Inna Yedzinovich"
+---
+
+### Introduction
+##### Assignment: working with JSON, HTML, XML, and Parquet in R 
+
+We have received the following data from CUNYMart, located at 123 Example Street,
+Anytown, USA.
+
+Ask: "This data will be used for inventory analysis at the retailer. You are required to prepare the data
+for analysis by formatting it in JSON, HTML, XML, and Parquet. Additionally, provide the pros
+and cons of each format."
+
+Let's create a datafrom from the procided data: 
+
+```{r}
+library(tibble)
+
+electronics_df <- tibble::tribble(
+  ~Category, ~Item_Name, ~Item_ID, ~Brand, ~Price, ~Series_ID, ~Series_Details,
+  "Electronics", "Smartphone", 101, "TechBrand", 699.99, "101-A", "Color: Black, Storage: 64GB",
+  "Electronics", "Smartphone", 101, "TechBrand", 699.99, "101-B", "Color: White, Storage: 128GB",
+  "Electronics", "Laptop", 102, "CompuBrand", 1099.99, "102-A", "Color: Silver, Storage: 256GB",
+  "Electronics", "Laptop", 102, "CompuBrand", 1099.99, "102-B", "Color: Space Gray, Storage: 512GB",
+  "Home Appliances", "Refrigerator", 201, "HomeCool", 899.99, "201-A", "Color: Stainless Steel, Capacity: 20 cu ft",
+  "Home Appliances", "Refrigerator", 201, "HomeCool", 899.99, "201-B", "Color: White, Capacity: 18 cu ft",
+  "Home Appliances", "Washing Machine", 202, "CleanTech", 499.99, "202-A", "Type: Front Load, Capacity: 4.5 cu ft",
+  "Home Appliances", "Washing Machine", 202, "CleanTech", 499.99, "202-B", "Type: Top Load, Capacity: 5.0 cu ft",
+  "Clothing", "T-Shirt", 301, "FashionCo", 19.99, "301-A", "Color: Blue, Size: S",
+  "Clothing", "T-Shirt", 301, "FashionCo", 19.99, "301-B", "Color: Red, Size: M",
+  "Clothing", "T-Shirt", 301, "FashionCo", 19.99, "301-C", "Color: Green, Size: L",
+  "Clothing", "Jeans", 302, "DenimWorks", 49.99, "302-A", "Color: Dark Blue, Size: 32",
+  "Clothing", "Jeans", 302, "DenimWorks", 49.99, "302-B", "Color: Light Blue, Size: 34",
+  "Books", "Fiction Novel", 401, "-", 14.99, "401-A", "Format: Hardcover, Language: English",
+  "Books", "Fiction Novel", 401, "-", 14.99, "401-B", "Format: Paperback, Language: Spanish",
+  "Books", "Non-Fiction Guide", 402, "-", 24.99, "402-A", "Format: eBook, Language: English",
+  "Books", "Non-Fiction Guide", 402, "-", 24.99, "402-B", "Format: Paperback, Language: French",
+  "Sports Equipment", "Basketball", 501, "SportsGear", 29.99, "501-A", "Size: Size 7, Color: Orange",
+  "Sports Equipment", "Tennis Racket", 502, "RacketPro", 89.99, "502-A", "Material: Graphite, Color: Black",
+  "Sports Equipment", "Tennis Racket", 502, "RacketPro", 89.99, "502-B", "Material: Aluminum, Color: Silver"
+)
+
+print(electronics_df)
+```
+
+Create a JSON file from this dataset. 
+
+```{r}
+library(jsonlite)
+json_data <- toJSON(electronics_df, pretty = TRUE)
+write(json_data, file = "electronics.json")
+```
+
+Save this json data info github. 
+GitHub Link: 
