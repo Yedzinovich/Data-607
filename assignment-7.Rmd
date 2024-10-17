@@ -80,3 +80,8 @@ electronics_html <- html_content %>%
   html_table(fill = TRUE)
 print(electronics_html)
 ```
+
+I will use a JSON file and a format converter to transform it into XML format. Let’s then read our generated XML file into a dataframe named electronics_xml. 
+
+```{r}
+```
