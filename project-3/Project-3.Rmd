@@ -1,0 +1,244 @@
+---
+title: "Data 607 Project 3"
+output: html_document
+author: "Md. Simon Chowdhury, Inna Yedzinovich, Zaneta Paulusova, Md Asaduzzaman, Md. Asadul"
+date: "`r Sys.Date()`"
+
+---
+## Introduction 
+
+TDODOOOOOOOOOOOOOO
+
+
+#### Tables creation for our data
+
+```{r}
+library(DBI)
+library(RMySQL)
+
+user <- Sys.getenv("MYSQL_USER")
+password <- Sys.getenv("MYSQL_PASSWORD")
+host <- Sys.getenv("MYSQL_HOST")
+dbname <- Sys.getenv("MYSQL_DBNAME")
+
+conn <- dbConnect(RMySQL::MySQL(), user = user, password = password, host = host, dbname = dbname)
+
+create_experience_table <- "
+CREATE TABLE experience (
+  experience_id INT NOT NULL,
+  respondent_id INT NULL,
+  data_science_experience TINYINT(1) NULL,
+  software_engineering_experience TINYINT(1) NULL,
+  PRIMARY KEY (experience_id)
+);"
+
+create_respondents_table <- "
+CREATE TABLE respondents (
+  respondent_id INT NOT NULL,
+  first_name VARCHAR(45) NULL,
+  last_name VARCHAR(45) NULL,
+  age INT NULL,
+  PRIMARY KEY (respondent_id)
+);"
+
+create_interestareas_table <- "
+CREATE TABLE interestareas (
+  interest_id INT NOT NULL,
+  respondent_id INT NULL,
+  interest_area VARCHAR(45) NULL,
+  PRIMARY KEY (interest_id)
+);"
+
+create_softskills_table <- "
+CREATE TABLE softskills (
+  soft_skill_id INT NOT NULL,
+  respondent_id INT NULL,
+  soft_skill VARCHAR(45) NULL,
+  PRIMARY KEY (soft_skill_id)
+);"
+
+create_programminglanguages_table <- "
+CREATE TABLE programminglanguages (
+  language_id INT NOT NULL,
+  respondent_id INT NULL,
+  language VARCHAR(45) NULL,
+  PRIMARY KEY (language_id)
+);"
+
+create_learningresources_table <- "
+CREATE TABLE learningresources (
+  resource_id INT NOT NULL,
+  respondent_id INT NULL,
+  resource VARCHAR(45) NULL,
+  PRIMARY KEY (resource_id)
+);"
+
+create_valuableskills_table <- "
+CREATE TABLE valuableskills (
+  valuable_skill_id INT NOT NULL,
+  respondent_id INT NULL,
+  skill_rank INT NULL,
+  skill_name VARCHAR(45) NULL,
+  PRIMARY KEY (valuable_skill_id)
+);"
+
+dbExecute(conn, create_experience_table)
+dbExecute(conn, create_respondents_table)
+dbExecute(conn, create_interestareas_table)
+dbExecute(conn, create_softskills_table)
+dbExecute(conn, create_programminglanguages_table)
+dbExecute(conn, create_learningresources_table)
+dbExecute(conn, create_valuableskills_table)
+
+dbDisconnect(conn)
+
+```
+
+WRITE BETTER TODOOOO
+
+Load the CSV into R
+Tidy and Normalize the Data
+Load the Data into the Database
+
+```{r}
+library(dplyr)
+library(tidyr)
+
+data <- read.csv("https://raw.githubusercontent.com/simonchy/DATA607/refs/heads/main/week%208/Cleaned_Augmented_Data_Science_Skills.csv")
+colnames(data)
+colnames(data) <- tolower(colnames(data))
+
+data <- data %>%
+  rename(
+    timestamp = timestamp,
+    first_name = first.name.or.nickname,
+    valuable_skills = list.the.5.most.valuable.data.science.skills..separated.by.commas.,
+    email = email.address,
+    age = age,
+    data_science_experience = any.data.science.data.analytics.experience.,
+    software_engineering_experience = any.software.engineering.experience.,
+    programming_languages = which.programming.languages.do.you.use.most.frequently.,
+    learning_resources = what.resources.do.you.use.for.learning.new.data.science.skills.,
+    interest_areas = what.areas.of.data.science.are.you.most.interested.in.learning.more.about.,
+    skill_1 = name..1.most.most.valuable.data.science.skill,
+    skill_2 = name..2.most.most.valuable.data.science.skill,
+    skill_3 = name..3.most.most.valuable.data.science.skill,
+    skill_4 = name..4.most.most.valuable.data.science.skill,
+    skill_5 = name..5.most.most.valuable.data.science.skill,
+    soft_skill = which.soft.skill.do.you.think.is.most.important.for.a.data.scientist.
+  ) %>%
+  mutate(across(everything(), tolower))
+
+# Create respondent_id before separating rows
+data <- data %>%
+  mutate(respondent_id = row_number())
+
+# Normalize the data
+respondents <- data %>%
+  select(first_name, age, respondent_id)
+
+experience <- data %>%
+  select(data_science_experience, software_engineering_experience, respondent_id) %>%
+  mutate(experience_id = row_number())
+
+valuable_skills <- data %>%
+  select(skill_1, skill_2, skill_3, skill_4, skill_5, respondent_id) %>%
+  pivot_longer(cols = starts_with("skill_"), names_to = "skill_rank", values_to = "skill_name") %>%
+  mutate(valuable_skill_id = row_number())
+
+programming_languages <- data %>%
+  select(respondent_id, programming_languages) %>%
+  separate_rows(programming_languages, sep = ",") %>%
+  mutate(language_id = row_number())
+
+learning_resources <- data %>%
+  select(respondent_id, learning_resources) %>%
+  separate_rows(learning_resources, sep = ",") %>%
+  mutate(resource_id = row_number())
+
+interest_areas <- data %>%
+  select(respondent_id, interest_areas) %>%
+  separate_rows(interest_areas, sep = ",") %>%
+  mutate(interest_id = row_number())
+
+soft_skills <- data %>%
+  select(soft_skill, respondent_id) %>%
+  mutate(soft_skill_id = row_number())
+
+conn <- dbConnect(RMySQL::MySQL(), user = Sys.getenv("MYSQL_USER"), password = Sys.getenv("MYSQL_PASSWORD"), host = Sys.getenv("MYSQL_HOST"), dbname = Sys.getenv("MYSQL_DBNAME"))
+
+# Load the data into the database
+dbWriteTable(conn, "respondents", respondents, overwrite = TRUE, row.names = FALSE)
+dbWriteTable(conn, "experience", experience, overwrite = TRUE, row.names = FALSE)
+dbWriteTable(conn, "valuableskills", valuable_skills, overwrite = TRUE, row.names = FALSE)
+dbWriteTable(conn, "programminglanguages", programming_languages, overwrite = TRUE, row.names = FALSE)
+dbWriteTable(conn, "learningresources", learning_resources, overwrite = TRUE, row.names = FALSE)
+dbWriteTable(conn, "interestareas", interest_areas, overwrite = TRUE, row.names = FALSE)
+dbWriteTable(conn, "softskills", soft_skills, overwrite = TRUE, row.names = FALSE)
+
+dbDisconnect(conn)
+
+```
+
+BETTER DESCRIPTION TODOOOOO
+Load the data from the database.
+Count the occurrences of each skill.
+Create a bar plot using ggplot2.
+
+```{r}
+library(ggplot2)
+
+conn <- dbConnect(RMySQL::MySQL(), user = Sys.getenv("MYSQL_USER"), password = Sys.getenv("MYSQL_PASSWORD"), host = Sys.getenv("MYSQL_HOST"), dbname = Sys.getenv("MYSQL_DBNAME"))
+valuable_skills <- dbReadTable(conn, "valuableskills")
+dbDisconnect(conn)
+
+skill_counts <- valuable_skills %>%
+  count(skill_name, sort = TRUE)
+print(skill_counts)
+
+ggplot(skill_counts, aes(x = reorder(skill_name, n), y = n)) +
+  geom_bar(stat = "identity", fill = "pink") +
+  labs(title = "Most Valuable Data Science Skills", x = "Data Science Skills", y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+Let's make it look cleaner: 
+
+```{r}
+
+# Group similar skills together using regex grepl
+valuable_skills <- valuable_skills %>%
+  mutate(skill_group = case_when(
+    grepl("machine learning|ML", skill_name, ignore.case = TRUE) ~ "Machine Learning",
+    grepl("programming|coding|software|Python|R", skill_name, ignore.case = TRUE) ~ "Programming",
+    grepl("statistics|statistical", skill_name, ignore.case = TRUE) ~ "Statistics",
+    grepl("data|database", skill_name, ignore.case = TRUE) ~ "Data Management",
+    grepl("math|algorithm", skill_name, ignore.case = TRUE) ~ "Mathematics & Algorithms",
+    grepl("communication|presentation", skill_name, ignore.case = TRUE) ~ "Communication",
+    grepl("teamwork|collaborat", skill_name, ignore.case = TRUE) ~ "Teamwork",
+    grepl("critical thinking|problem solving|analysis", skill_name, ignore.case = TRUE) ~ "Critical Thinking",
+    TRUE ~ "Other"
+  ))
+
+skill_counts <- valuable_skills %>%
+  count(skill_group, sort = TRUE)
+
+ggplot(skill_counts, aes(x = reorder(skill_group, n), y = n)) +
+  geom_bar(stat = "identity", fill = "pink") +
+  labs(title = "Most Valuable Data Science Skills", x = "Skill Categories", y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+
+MORE ANALYSIS
+
+TODOOOOOOOOO
+
+
+### Conclusion
+
+TODOOOOOOOOOOOO
