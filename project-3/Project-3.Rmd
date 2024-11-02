@@ -232,10 +232,44 @@ ggplot(skill_counts, aes(x = reorder(skill_group, n), y = n)) +
 ```
 
 
-MORE ANALYSIS
+Now, we can compare our results with the findings from the Data Science Skills Survey 2022 by AIM and Great Learning, available at this link.
 
-TODOOOOOOOOO
+Below is a table from that website showing the common skills sought by recruiters across different years of experience. The aim is to determine if the skills identified in our internal survey align with those highlighted by recruiters on the website.
 
+```{r}
+common_skills_years <- read.csv("https://raw.githubusercontent.com/ZanetaP02/DATA-607/refs/heads/main/Data%20Science%20Skills%20Survey%202022%20-%20By%20AIM%20and%20Great%20Learning%20-%20Common%20skills%20by%20years%20table.csv")
+
+head(common_skills_years)
+
+common_skills_years <- common_skills_years %>%
+  mutate(skill_group = case_when(
+    grepl("machine learning|ML", skills, ignore.case = TRUE) ~ "Machine Learning",
+    grepl("programming knowledge", skills, ignore.case = TRUE) ~ "Programming",
+    grepl("statistics", skills, ignore.case = TRUE) ~ "Statistics",
+    grepl("communication skills", skills, ignore.case = TRUE) ~ "Communication",
+    grepl("data visualisation|data wrangling and pre-processing", skills, ignore.case = TRUE) ~ "Data Management",
+    TRUE ~ "Other"
+  ))
+
+common_skill_counts <- common_skills_years %>%
+  count(skill_group, sort = TRUE)
+
+```
+ 
+```{r}
+merged_skill_counts <- merge(skill_counts, common_skill_counts, by = "skill_group", suffixes = c("_internal", "_external"))
+
+merged_skill_counts_long <- merged_skill_counts %>%
+  pivot_longer(cols = starts_with("n_"), names_to = "source", values_to = "count") %>%
+  mutate(source = recode(source, "n_internal" = "Internal", "n_external" = "External"))
+
+ggplot(merged_skill_counts_long, aes(x = skill_group, y = count, fill = source)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  labs(title = "Comparison of Skill Groups Between Internal Survey and External Data",
+       x = "Skill Group", y = "Count", fill = "Source") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
 
 ### Conclusion
 
