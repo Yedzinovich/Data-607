@@ -181,9 +181,7 @@ dbDisconnect(conn)
 ```
 
 BETTER DESCRIPTION TODOOOOO
-Load the data from the database.
-Count the occurrences of each skill.
-Create a bar plot using ggplot2.
+
 
 ```{r}
 library(ggplot2)

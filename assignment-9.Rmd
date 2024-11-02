@@ -1,0 +1,70 @@
+---
+title: "assignment-9"
+output: html_document
+date: "2024-11-02"
+author: "Inna Yedzinovich"
+---
+
+### Introduction
+
+The New York Times provides a variety of APIs that offer access to their extensive data. To begin, sign up for an API key at the New York Times Developer Network (url: https://developer.nytimes.com/apis). The task is to select one of these APIs, create an interface in R to fetch the JSON data, and convert it into an R DataFrame.
+
+##### Connect and Request from the API
+
+I am utilizing the Books API to access the Best Sellers Lists.
+
+```{r }
+library(jsonlite)
+library(dplyr)
+
+url <- paste0('https://api.nytimes.com/svc/books/v3/lists/best-sellers/history.json?api-key=', Sys.getenv("TIMES_API_KEY"))
+
+best_seller_data <- fromJSON(url)$results %>%
+  as.data.frame()
+
+print(names(best_seller_data))
+head(best_seller_data)
+
+```
+
+Now, let’s tidy up our data a bit.
+
+In JSON data, some fields can contain nested lists. For example, the isbns field might contain multiple ISBN numbers for a single book, and ranks_history might contain a list of historical rankings.
+Using unnest_wider helps to flatten these nested lists into separate columns. This makes the data easier to work with because each piece of information is in its own column rather than being nested within a list.
+
+For example:
+
+Before flattening, the isbns column might look like this: [{isbn10: "1234567890", isbn13: "123-4567890123"}].
+After flattening, it would be split into two columns: isbns_isbn10 and isbns_isbn13.
+
+```{r }
+library(tidyr)
+
+tidy_best_seller_data <- best_seller_data %>%
+  unnest_wider(isbns, names_sep = "_") %>%
+  unnest_wider(ranks_history, names_sep = "_") %>%
+  unnest_wider(reviews, names_sep = "_") %>%
+  select(title, author, publisher, description, price, age_group, contributor_note)
+
+head(tidy_best_seller_data)
+```
+
+Now, I am going to find the top 5 authors with the most best sellers. I will sort primarily by best_seller_count and secondarily by the number of books.
+
+```{r }
+library(ggplot2)
+
+author_counts <- tidy_best_seller_data %>%
+  group_by(author) %>%
+  summarise(best_seller_count = n(),
+            book_count = n_distinct(title)) %>%
+  arrange(desc(best_seller_count), desc(book_count)) %>%
+  slice_head(n = 5)
+
+print(author_counts)
+
+```
+
+### Conclusion
+
+The goal of this assignment was to in JSON data from the New York Times API and transform it into an R data frame. I used unnest_wider to tidy data of NYT Best Seller Books. 
