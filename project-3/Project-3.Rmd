@@ -7,7 +7,9 @@ date: "`r Sys.Date()`"
 ---
 ## Introduction 
 
-TDODOOOOOOOOOOOOOO
+For this project we focused on answering the question “What are the most valued data science skills?”.
+
+Our approach to answering this question involved creating a survey to identify five valuable data science skills as perceived by survey respondents. We then compared these findings to the article titled "Data Science Skills Survey 2022 – By AIM and Great Learning." In this article, we focused on a table that lists common skills desired by recruiters, categorized by years of experience. We will adjust the data to ensure the skills align with one another. Additionally, we will calculate the mean for the various years of experience columns from the website's data. Finally, we will combine both datasets into one graph for a comparative analysis of our internal survey results alongside the findings from the website.
 
 
 #### Tables creation for our data
@@ -234,42 +236,125 @@ ggplot(skill_counts, aes(x = reorder(skill_group, n), y = n)) +
 
 Now, we can compare our results with the findings from the Data Science Skills Survey 2022 by AIM and Great Learning, available at this link.
 
-Below is a table from that website showing the common skills sought by recruiters across different years of experience. The aim is to determine if the skills identified in our internal survey align with those highlighted by recruiters on the website.
+Below is a table from that website showing the common skills sought by recruiters across different years of experience. The aim is to determine if the skills identified in our internal survey align with those highlighted by recruiters on the website. We will be calculation the mean of the years of experience as we did not request this information on our survey.
 
 ```{r}
 common_skills_years <- read.csv("https://raw.githubusercontent.com/ZanetaP02/DATA-607/refs/heads/main/Data%20Science%20Skills%20Survey%202022%20-%20By%20AIM%20and%20Great%20Learning%20-%20Common%20skills%20by%20years%20table.csv")
+common_skills_years
+```
 
-head(common_skills_years)
+## Rename columns fo essier use
+```{r}
+up_csy <-common_skills_years
+colnames(common_skills_years)[1] <-"skill_group"
+colnames(common_skills_years)[2] <-">3yrs_%"
+colnames(common_skills_years)[3] <-"3-5yrs_%"
+colnames(common_skills_years)[4] <-"6-10yrs_%"
+colnames(common_skills_years)[5] <-"10yrs<_%"
+update <-common_skills_years
+colnames(common_skills_years) <- c("skill_group", "<3yrs_%", "3-5yrs_%", "6-10yrs_%", "10yrs<_%")
+head(up_csy)
+```
 
-common_skills_years <- common_skills_years %>%
-  mutate(skill_group = case_when(
-    grepl("machine learning|ML", skills, ignore.case = TRUE) ~ "Machine Learning",
-    grepl("programming knowledge", skills, ignore.case = TRUE) ~ "Programming",
-    grepl("statistics", skills, ignore.case = TRUE) ~ "Statistics",
-    grepl("communication skills", skills, ignore.case = TRUE) ~ "Communication",
-    grepl("data visualisation|data wrangling and pre-processing", skills, ignore.case = TRUE) ~ "Data Management",
-    TRUE ~ "Other"
-  ))
-
-common_skill_counts <- common_skills_years %>%
-  count(skill_group, sort = TRUE)
-
+## moving the diffrent years of expericance columns to one column
+```{r}
+up_csy1 <- up_csy %>%
+pivot_longer(cols = c('>3yrs_%','3-5yrs_%','6-10yrs_%','10yrs<_%'), names_to = "year_experiance", values_to = "percentage")
+head(up_csy1)
 ```
  
+## calculating the mean of the skills
 ```{r}
-merged_skill_counts <- merge(skill_counts, common_skill_counts, by = "skill_group", suffixes = c("_internal", "_external"))
+avg_csy <- up_csy1 %>% group_by(skill_group) %>% 
+  summarise(mean_percentage=mean(percentage),
+            .groups = 'drop')
+avg_csy
+```
 
-merged_skill_counts_long <- merged_skill_counts %>%
-  pivot_longer(cols = starts_with("n_"), names_to = "source", values_to = "count") %>%
-  mutate(source = recode(source, "n_internal" = "Internal", "n_external" = "External"))
 
-ggplot(merged_skill_counts_long, aes(x = skill_group, y = count, fill = source)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
-  labs(title = "Comparison of Skill Groups Between Internal Survey and External Data",
-       x = "Skill Group", y = "Count", fill = "Source") +
+## grouping skills to match internal survey
+```{r}
+avg_csy1 <- avg_csy %>%
+ mutate(skill_group = case_when(
+    grepl("communication skills", skill_group, ignore.case =TRUE) ~ "Communication",
+    grepl("programming knowledge", skill_group, ignore.case =TRUE) ~ "Programming",
+    grepl("statistics",  skill_group, ignore.case =TRUE) ~ "Statistics",
+    grepl("machine learning",  skill_group, ignore.case =TRUE) ~ "Machine Learning",
+    grepl("linear algebra & calculus",  skill_group, ignore.case =TRUE) ~ "Mathematics & Algorithms",
+    grepl("big data",  skill_group, ignore.case =TRUE) ~ "Data Management",
+    grepl("deep learning",  skill_group, ignore.case =TRUE) ~ "Critical Thinking",
+    grepl("data visualisation|business acumen|presentation skills|model deployment|data wrangling and pre-processing|domain expertise",  skill_group, ignore.case =TRUE) ~ "Other",
+  ))
+avg_csy1
+```
+ 
+## calculating mean of grouping skills to match internal survey skills
+```{r}
+avg_skills <- avg_csy1 %>% group_by(skill_group) %>% 
+  summarise(mean_percentage=mean(mean_percentage),
+            .groups = 'drop')
+avg_skills
+```
+ 
+ 
+```{r}
+ggplot(avg_skills, aes(x = reorder(skill_group, mean_percentage), y = mean_percentage)) +
+  geom_bar(stat = "identity", fill = "orange") +
+  labs(title = "Data Science Skills", x = "Skill Categories", y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+Now, let’s align our survey skills data with the format used on the website by converting the survey results into percentages.
+
+```{r}
+total_count <- sum(skill_counts$n)
+total_count
+
+skill_counts <- skill_counts %>%
+  mutate(percentage = (n / total_count) * 100)
+skill_counts
+
+ggplot(skill_counts, aes(x = reorder(skill_group, percentage), y = percentage)) +
+  geom_bar(stat = "identity", fill = "pink") +
+  labs(title = "Most Valuable Data Science Skills", x = "Skill Categories", y = "Percentage") +
+  theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
+
+
+```{r}
+merged_skill_counts <- avg_skills %>%
+  left_join(skill_counts, by = "skill_group")
+merged_skill_counts
+
+merged_skill_counts <- merged_skill_counts %>%
+  select(-n) %>%
+  rename(
+    website = mean_percentage,
+    survey = percentage
+  )
+
+merged_skill_counts
+
+```
+ 
+
+```{r}
+in_ex_skills <- merged_skill_counts %>%
+  pivot_longer(cols = c('website', 'survey'), names_to = "website/survey", values_to = "mean %")
+in_ex_skills 
+```
+
+```{r}
+ggplot(in_ex_skills, aes(x = skill_group, y = `mean %`, fill = `website/survey`)) +
+  geom_col(position = position_dodge()) +
+  ggtitle("Comparison of Skill Groups Between Internal Survey and External Data") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
 
 ### Conclusion
 
