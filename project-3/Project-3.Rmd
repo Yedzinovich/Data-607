@@ -1,7 +1,7 @@
 ---
 title: "Data 607 Project 3"
 output: html_document
-author: "Md. Simon Chowdhury, Inna Yedzinovich, Zaneta Paulusova, Md Asaduzzaman, Md. Asadul"
+author: "Inna Yedzinovich, Zaneta Paulusova, Md Asaduzzaman, Md. Asadul, Md. Simon Chowdhury"
 date: "`r Sys.Date()`"
 
 ---
@@ -96,11 +96,7 @@ dbDisconnect(conn)
 
 ```
 
-WRITE BETTER TODOOOO
-
-Load the CSV into R
-Tidy and Normalize the Data
-Load the Data into the Database
+This process involves loading a CSV file into R, tidying and normalizing the data, and then loading the cleaned data into a database.
 
 ```{r}
 library(dplyr)
@@ -182,8 +178,7 @@ dbDisconnect(conn)
 
 ```
 
-BETTER DESCRIPTION TODOOOOO
-
+Let's demonstrates how to connect to a MySQL database, retrieve data, and visualize it using R.
 
 ```{r}
 library(ggplot2)
@@ -243,27 +238,27 @@ common_skills_years <- read.csv("https://raw.githubusercontent.com/ZanetaP02/DAT
 common_skills_years
 ```
 
-## Rename columns fo essier use
-```{r}
-up_csy <-common_skills_years
-colnames(common_skills_years)[1] <-"skill_group"
-colnames(common_skills_years)[2] <-">3yrs_%"
-colnames(common_skills_years)[3] <-"3-5yrs_%"
-colnames(common_skills_years)[4] <-"6-10yrs_%"
-colnames(common_skills_years)[5] <-"10yrs<_%"
-update <-common_skills_years
-colnames(common_skills_years) <- c("skill_group", "<3yrs_%", "3-5yrs_%", "6-10yrs_%", "10yrs<_%")
-head(up_csy)
-```
+To streamline data manipulation, first rename the columns for easier reference, then consolidate the different years of experience into a single column.
+ 
+```{r up_csy}
+up_csy <- common_skills_years
 
-## moving the diffrent years of expericance columns to one column
-```{r}
+colnames(up_csy)[1] <- "skill_group"
+colnames(up_csy)[2] <- "less than 3yrs"
+colnames(up_csy)[3] <- "3-5yrs"
+colnames(up_csy)[4] <- "6-10yrs"
+colnames(up_csy)[5] <- "10yrs"
+
+# Print column names to verify
+print(colnames(up_csy))
+
 up_csy1 <- up_csy %>%
-pivot_longer(cols = c('>3yrs_%','3-5yrs_%','6-10yrs_%','10yrs<_%'), names_to = "year_experiance", values_to = "percentage")
+  pivot_longer(cols = c('less than 3yrs', '3-5yrs', '6-10yrs', '10yrs'), names_to = "year_experience", values_to = "percentage")
+
 head(up_csy1)
 ```
  
-## calculating the mean of the skills
+Calculating the mean of the skills
 ```{r}
 avg_csy <- up_csy1 %>% group_by(skill_group) %>% 
   summarise(mean_percentage=mean(percentage),
@@ -272,7 +267,7 @@ avg_csy
 ```
 
 
-## grouping skills to match internal survey
+Grouping skills to match internal survey
 ```{r}
 avg_csy1 <- avg_csy %>%
  mutate(skill_group = case_when(
@@ -288,7 +283,7 @@ avg_csy1 <- avg_csy %>%
 avg_csy1
 ```
  
-## calculating mean of grouping skills to match internal survey skills
+Calculating mean of grouping skills to match internal survey skills
 ```{r}
 avg_skills <- avg_csy1 %>% group_by(skill_group) %>% 
   summarise(mean_percentage=mean(mean_percentage),
@@ -323,6 +318,7 @@ ggplot(skill_counts, aes(x = reorder(skill_group, percentage), y = percentage)) 
 
 ```
 
+Let’s combine the two datasets based on the percentages of the most valued skills.
 
 ```{r}
 merged_skill_counts <- avg_skills %>%
@@ -340,12 +336,15 @@ merged_skill_counts
 
 ```
  
+Convert into the long format: 
 
 ```{r}
 in_ex_skills <- merged_skill_counts %>%
   pivot_longer(cols = c('website', 'survey'), names_to = "website/survey", values_to = "mean %")
 in_ex_skills 
 ```
+
+Plot the differences: 
 
 ```{r}
 ggplot(in_ex_skills, aes(x = skill_group, y = `mean %`, fill = `website/survey`)) +
@@ -354,8 +353,11 @@ ggplot(in_ex_skills, aes(x = skill_group, y = `mean %`, fill = `website/survey`)
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-
-
 ### Conclusion
 
-TODOOOOOOOOOOOO
+Differences: When comparing our internal survey with external data, some differences stand out. For example, our respondents rated programming and statistics higher than recruiters did. This might be because our group focuses more on technical skills needed for data work. On the other hand, recruiters emphasized communication and critical thinking more. This suggests that employers want candidates who can not only handle technical tasks but also explain their insights and solve problems strategically. This difference might show that data scientists don’t always realize how important these soft skills are for working with teams and explaining their work to non-technical people.
+
+Commonalities: Despite these differences, there are skills that both our survey and the external data agree on. Skills like data management and machine learning are valued by both groups. This shows that these skills are seen as essential in the data science field. Both respondents and recruiters recognize these as key abilities because they are crucial for handling and analyzing large datasets, which is a core part of data science work. This agreement highlights that both sides understand the importance of these technical skills.
+
+Interpretation of Differences and Commonalities: The differences likely come from different views on what a data scientist’s role should be. Recruiters might prioritize communication and critical thinking because these skills help with teamwork and making strategic business decisions. In contrast, data scientists might see technical skills as more important because they focus on solving technical problems and analyzing data. However, both sides agree on the importance of data management and machine learning, showing that technical proficiency is essential for success in the field.
+
