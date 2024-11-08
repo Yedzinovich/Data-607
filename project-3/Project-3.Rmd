@@ -1,9 +1,11 @@
 ---
 title: "Data 607 Project 3"
-output: html_document
-author: "Inna Yedzinovich, Zaneta Paulusova, Md Asaduzzaman, Md. Asadul, Md. Simon Chowdhury"
+author: Inna Yedzinovich, Zaneta Paulusova, Md Asaduzzaman, Md. Asadul, Md. Simon
+  Chowdhury
 date: "`r Sys.Date()`"
-
+output:
+  pdf_document: default
+  html_document: default
 ---
 ## Introduction 
 
