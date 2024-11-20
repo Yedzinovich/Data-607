@@ -1,0 +1,41 @@
+---
+title: "assignment 11"
+output: html_document
+date: "2024-11-19"
+author: "Inna Yedzinovich"
+---
+
+## Intruduction
+
+Let's construct a recommendation structure for Vino.com. Using Vino.com and insights from the Medium forum as references, we aim to develop a system that enhances the user experience by providing personalized wine suggestions. This approach will leverage advanced techniques similar to those discussed in the article on Medium by Ahror Haidarov, which outlines a comprehensive wine recommendation system.
+
+Reference link: https://medium.com/@ahror_haidarov/wine-recommendation-system-8179180bc349
+
+### To Customers:
+
+1. **Who are your target users?**
+   - The target users are consumers interested in purchasing wine, whether they are casual drinkers or connoisseurs.
+
+2. **What are their key goals?**
+   - The key goal of Vino.com's recommender system is to provide accurate and personalized wine suggestions based on users' taste preferences, purchase history, and browsing behavior.
+
+3. **How can you help them accomplish those goals?**
+   - In addition to personalized suggestions based on wine categories and user preferences, incorporating variables such as price range and occasion (such as gifts, parties) can further tailor recommendations. This ensures that users receive suggestions that fit their budget and specific needs, enhancing their shopping experience.
+
+### To the Organization:
+
+1. **Who are your target users?**
+   - The target users are Vino.com staff, including marketing and sales teams.
+
+2. **What are their key goals?**
+   - The key goal could be to identify wines with similar features and prices that need to be promoted on the front page for quicker sales or to query wines that are highly demanded to be priced correctly.
+
+3. **How can you help them accomplish those goals?**
+   - Similar strategies as those mentioned for customers can be employed here. Employees tasked with certain sales promotions could benefit from seeing more related wine suggestions, reducing manual labor in the analysis aspect.
+
+4. **Reverse Engineering:**
+   - Vino.com could use a Near-Real-Time (NRT) system to provide instantaneous query speed. This could involve capturing user interactions on the website, using a deep learning model to predict preferences, and generating real-time recommendations.
+
+5. **Improvements:**
+   - While such a system is quick in processing time, it can be complex in design and maintenance. One area of improvement is to prioritize user queries by ranking user tiers. Higher-tier users, who are more likely to make purchases, could be routed to use the NRT system for fast suggestions. Lower-tier users could use a simpler but slower recommendation method. High tiers could be defined by factors such as purchase frequency and average spending.
+
