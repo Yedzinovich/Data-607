@@ -7,7 +7,7 @@ author: "Inna Yedzinovich"
 
 ## Intruduction
 
-Let's construct a recommendation structure for Vino.com. Using Vino.com and insights from the Medium forum as references, we aim to develop a system that enhances the user experience by providing personalized wine suggestions. This approach will leverage advanced techniques similar to those discussed in the article on Medium by Ahror Haidarov, which outlines a comprehensive wine recommendation system.
+Let's analyze the existing recommendation structure for Vino.com. Using Vino.com and insights from the Medium forum as references, we aim to enhance the system to provide even more personalized wine suggestions. This approach will leverage advanced techniques similar to those discussed in the article on Medium by Ahror Haidarov, which outlines a comprehensive wine recommendation system.
 
 Reference link: https://medium.com/@ahror_haidarov/wine-recommendation-system-8179180bc349
 
